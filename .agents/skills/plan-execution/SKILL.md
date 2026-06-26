@@ -20,3 +20,13 @@ Use this skill when executing task items, writing code, or running verification 
   * **Major Features**: Require comprehensive unit/integration tests and behavior evaluations.
   * **Medium & Small Features**: Require targeted test cases for the majority of implementations to maintain consistency and functionality.
 
+## 4. Test Failure Reporting & Changelog
+* **Changelog Maintenance**: If any automated test fails during development:
+  * Log the failure in `test_changelog.md` in the project root.
+  * For each entry, specify:
+    1. **Failed Test**: Which test function/suite failed.
+    2. **Reason**: The root cause of the failure.
+    3. **Resolution**: What was changed to resolve the issue.
+  * Simply append new failure logs to `test_changelog.md` without requiring the agent to read it at every run.
+
+
