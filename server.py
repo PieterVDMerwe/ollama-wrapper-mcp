@@ -69,7 +69,7 @@ async def run_model_completion(model_name: str, prompt: str, ctx: Context) -> di
             await ctx.error(f"Failed to execute completion on model {model_name}: {str(e)}")
             raise RuntimeError(f"Error communicating with Ollama: {e}")
 
-@mcp.resource("active_model/status")
+@mcp.resource("active-model://status")
 def get_active_model_status() -> str:
     """
     Get the status of the currently loaded active model.
