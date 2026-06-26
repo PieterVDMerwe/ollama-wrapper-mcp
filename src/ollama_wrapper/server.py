@@ -1,9 +1,9 @@
 import httpx
 from mcp.server.fastmcp import FastMCP, Context
-from .config import settings
-from .security import scan_prompt
-from .tools_helper import format_tool_for_ollama
-from .prompts import get_prompt_value
+from ollama_wrapper.config import settings
+from ollama_wrapper.security import scan_prompt
+from ollama_wrapper.tools_helper import format_tool_for_ollama
+from ollama_wrapper.prompts import get_prompt_value
 from mcp.server.fastmcp.prompts import base
 
 # Initialize FastMCP Server
@@ -112,6 +112,54 @@ async def generate_with_tools(model_name: str, messages: list[dict], tools: list
             }
         except Exception as e:
             await ctx.error(f"Failed to execute tool-completion on model {model_name}: {str(e)}")
+            raise RuntimeError(f"Error communicating with Ollama: {e}")
+
+@mcp.tool()
+async def list_running_models(ctx: Context) -> list[dict]:
+    """
+    List all models currently loaded and running in memory (RAM/VRAM).
+    """
+    await ctx.info("Checking running Ollama models...")
+    async with httpx.AsyncClient(timeout=settings.request_timeout) as client:
+        try:
+            response = await client.get(f"{settings.ollama_host}/api/ps")
+            response.raise_for_status()
+            data = response.json()
+            models = data.get("models", [])
+            return [
+                {
+                    "name": m.get("name"),
+                    "size": m.get("size"),
+                    "vram": m.get("size_vram"),
+                    "expires_at": m.get("expires_at")
+                }
+                for m in models
+            ]
+        except Exception as e:
+            await ctx.error(f"Failed to check running models: {str(e)}")
+            raise RuntimeError(f"Error communicating with Ollama: {e}")
+
+@mcp.tool()
+async def stop_model(model_name: str, ctx: Context) -> dict:
+    """
+    Stop and unload a specific model from memory (RAM/VRAM).
+    """
+    await ctx.info(f"Unloading model {model_name} from memory...")
+    async with httpx.AsyncClient(timeout=settings.request_timeout) as client:
+        try:
+            payload = {
+                "model": model_name,
+                "prompt": "",
+                "keep_alive": 0
+            }
+            # Sending an empty prompt with keep_alive=0 unloads the model
+            response = await client.post(f"{settings.ollama_host}/api/generate", json=payload)
+            response.raise_for_status()
+            if state.active_model == model_name:
+                state.active_model = None
+            return {"status": "success", "message": f"Model {model_name} has been successfully unloaded."}
+        except Exception as e:
+            await ctx.error(f"Failed to unload model {model_name}: {str(e)}")
             raise RuntimeError(f"Error communicating with Ollama: {e}")
 
 @mcp.prompt()

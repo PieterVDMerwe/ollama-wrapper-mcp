@@ -1,4 +1,4 @@
-from .config import settings
+from ollama_wrapper.config import settings
 
 def scan_prompt(prompt: str) -> bool:
     """

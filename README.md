@@ -25,7 +25,8 @@ A Python-based Model Context Protocol (MCP) server wrapping local Ollama capabil
 ### Running the Server
 To run the server locally via standard I/O (STDIO):
 ```bash
-uv run python src/ollama_wrapper/server.py
+$env:PYTHONPATH="src"
+uv run python -m ollama_wrapper.server
 ```
 
 ### Running Tests

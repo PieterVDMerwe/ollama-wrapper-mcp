@@ -131,3 +131,45 @@ async def test_generate_with_tools_success(mock_post):
     assert len(result["message"]["tool_calls"]) == 1
     assert result["done"] is True
 
+@pytest.mark.asyncio
+@patch("httpx.AsyncClient.get")
+async def test_list_running_models(mock_get):
+    from ollama_wrapper.server import list_running_models
+    from unittest.mock import MagicMock
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {
+        "models": [
+            {
+                "name": "qwen2.5-coder:1.5b",
+                "size": 1600000000,
+                "size_vram": 1600000000,
+                "expires_at": "2026-06-26T16:00:00Z"
+            }
+        ]
+    }
+    mock_response.raise_for_status = lambda: None
+    mock_get.return_value = mock_response
+
+    ctx = MockContext()
+    result = await list_running_models(ctx)
+    assert len(result) == 1
+    assert result[0]["name"] == "qwen2.5-coder:1.5b"
+    assert result[0]["vram"] == 1600000000
+
+@pytest.mark.asyncio
+@patch("httpx.AsyncClient.post")
+async def test_stop_model(mock_post):
+    from ollama_wrapper.server import stop_model
+    from unittest.mock import MagicMock
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {"status": "success"}
+    mock_response.raise_for_status = lambda: None
+    mock_post.return_value = mock_response
+
+    ctx = MockContext()
+    result = await stop_model("qwen2.5-coder:1.5b", ctx)
+    assert result["status"] == "success"
+    assert "unloaded" in result["message"]
+
