@@ -32,6 +32,5 @@ uv run python -m ollama_wrapper.server
 ### Running Tests
 To run the unit tests:
 ```bash
-$env:PYTHONPATH="src"
 uv run pytest
 ```
