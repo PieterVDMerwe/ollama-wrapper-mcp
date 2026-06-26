@@ -143,3 +143,6 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 .DS_Store
+
+# Local configuration
+my_mcp_config.md
