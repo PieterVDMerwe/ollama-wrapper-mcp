@@ -1,0 +1,82 @@
+import httpx
+from mcp.server.fastmcp import FastMCP, Context
+from config import settings
+from security import scan_prompt
+
+# Initialize FastMCP Server
+mcp = FastMCP("Ollama-Wrapper", stateless_http=True, json_response=True)
+
+# Store active model state locally in the server session/state
+class ServerState:
+    active_model: str | None = None
+
+state = ServerState()
+
+@mcp.tool()
+async def list_local_models(ctx: Context) -> list[dict]:
+    """
+    List all local models currently downloaded in the Ollama instance.
+    """
+    await ctx.info("Fetching local Ollama models...")
+    async with httpx.AsyncClient(timeout=settings.request_timeout) as client:
+        try:
+            response = await client.get(f"{settings.ollama_host}/api/tags")
+            response.raise_for_status()
+            data = response.json()
+            models = data.get("models", [])
+            return [
+                {
+                    "name": m.get("name"),
+                    "size": m.get("size"),
+                    "family": m.get("details", {}).get("family"),
+                    "parameter_size": m.get("details", {}).get("parameter_size"),
+                }
+                for m in models
+            ]
+        except Exception as e:
+            await ctx.error(f"Failed to fetch models from Ollama: {str(e)}")
+            raise RuntimeError(f"Could not connect to Ollama at {settings.ollama_host}: {e}")
+
+@mcp.tool()
+async def run_model_completion(model_name: str, prompt: str, ctx: Context) -> dict:
+    """
+    Run text generation completion on a specific local model.
+    """
+    # Security Compliance check
+    if scan_prompt(prompt):
+        await ctx.error("Prompt injection pattern detected. Request blocked.")
+        return {"error": "Prompt blocked by static security scanner."}
+    
+    await ctx.info(f"Running completion on model: {model_name}...")
+    state.active_model = model_name
+    
+    async with httpx.AsyncClient(timeout=settings.request_timeout) as client:
+        try:
+            payload = {
+                "model": model_name,
+                "prompt": prompt,
+                "stream": False
+            }
+            response = await client.post(f"{settings.ollama_host}/api/generate", json=payload)
+            response.raise_for_status()
+            result = response.json()
+            return {
+                "model": model_name,
+                "response": result.get("response"),
+                "done": result.get("done")
+            }
+        except Exception as e:
+            await ctx.error(f"Failed to execute completion on model {model_name}: {str(e)}")
+            raise RuntimeError(f"Error communicating with Ollama: {e}")
+
+@mcp.resource("active_model/status")
+def get_active_model_status() -> str:
+    """
+    Get the status of the currently loaded active model.
+    """
+    if state.active_model:
+        return f"Active model: {state.active_model}"
+    return "No model has been run yet."
+
+if __name__ == "__main__":
+    mcp.run()
