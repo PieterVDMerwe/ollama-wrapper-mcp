@@ -1,4 +1,4 @@
-from security import scan_prompt
+from ollama_wrapper.security import scan_prompt
 
 def test_safe_prompts():
     assert not scan_prompt("Hello, what models are available?")

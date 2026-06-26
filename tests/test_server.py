@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import AsyncMock, patch
-from server import list_local_models, run_model_completion, get_active_model_status
+from ollama_wrapper.server import list_local_models, run_model_completion, get_active_model_status
 
 class MockContext:
     def __init__(self):

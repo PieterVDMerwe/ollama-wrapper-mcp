@@ -1,4 +1,4 @@
-from config import settings
+from ollama_wrapper.config import settings
 
 def test_default_settings():
     assert settings.ollama_host == "http://localhost:11434"

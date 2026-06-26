@@ -1,7 +1,7 @@
 import httpx
 from mcp.server.fastmcp import FastMCP, Context
-from config import settings
-from security import scan_prompt
+from .config import settings
+from .security import scan_prompt
 
 # Initialize FastMCP Server
 mcp = FastMCP("Ollama-Wrapper", stateless_http=True, json_response=True)
