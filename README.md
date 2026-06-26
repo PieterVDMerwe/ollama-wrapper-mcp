@@ -125,6 +125,71 @@ uv run pytest
 
 ---
 
+## Integration with External Projects & Clients
+
+To use this MCP server in another project or on a different PC:
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/PieterVDMerwe/ollama-wrapper-mcp.git
+```
+
+### 2. Configure Your Client
+Add the configuration block under the `mcpServers` key of your client settings file:
+
+#### A. Claude Desktop
+* **Configuration Path**: `%APPDATA%\Claude\claude_desktop_config.json`
+* **JSON Payload**:
+  ```json
+  {
+    "mcpServers": {
+      "ollama-wrapper": {
+        "command": "uv",
+        "args": [
+          "--directory",
+          "C:/path/to/cloned/ollama-wrapper-mcp",
+          "run",
+          "python",
+          "-m",
+          "ollama_wrapper.server"
+        ],
+        "env": {
+          "PYTHONPATH": "src",
+          "OLLAMA_HOST": "http://localhost:11434"
+        }
+      }
+    }
+  }
+  ```
+
+#### B. Google Antigravity 2.0 & Antigravity IDE
+* **Configuration Path**: `~/.gemini/config/mcp_config.json`
+* **JSON Payload**:
+  ```json
+  {
+    "mcpServers": {
+      "ollama-wrapper": {
+        "command": "uv",
+        "args": [
+          "--directory",
+          "C:/path/to/cloned/ollama-wrapper-mcp",
+          "run",
+          "python",
+          "-m",
+          "ollama_wrapper.server"
+        ],
+        "env": {
+          "PYTHONPATH": "src",
+          "OLLAMA_HOST": "http://localhost:11434"
+        }
+      }
+    }
+  }
+  ```
+*(Make sure to replace `C:/path/to/cloned/` with the absolute path to the directory on the new machine).*
+
+---
+
 ## Agent / LLM Instructions
 
 When interacting with this MCP server as an AI assistant or agent client, adhere to the following operation guidelines:
